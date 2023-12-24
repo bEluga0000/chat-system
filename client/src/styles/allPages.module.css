@@ -1,0 +1,9 @@
+.room
+{
+    width: 400px;
+    height: 95vh;
+    display: flex;
+    flex-direction: column;
+    /* border: 1px solid black; */
+    padding: 0 5px;
+}
