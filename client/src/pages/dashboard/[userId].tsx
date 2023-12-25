@@ -1,7 +1,7 @@
 import ShowRoom from "@/components/showRoom";
 import Topbar from "@/components/Topbar";
 import { Card } from "@mui/material";
-import style from "../styles/allPages.module.css"
+import style from "../../styles/allPages.module.css"
 export default function Dashboard() {
     return (
         <Card className={style.room}>

@@ -26,7 +26,7 @@ router.post('/signup',async (req,res)=>{
                 if (secretKey) {
                     const token = jwt.sign({ id: newUser._id }, secretKey, { expiresIn: '1h' })
                     await newUser.save();
-                    res.status(201).json({ message: 'USer signup successfully', token })
+                    res.status(201).json({ message: 'USer signup successfully', token ,userId:newUser._id,username:newUser.username})
                 }
             }
             else
@@ -42,12 +42,12 @@ router.post('/signup',async (req,res)=>{
             if (user) {
                 if (secretKey) {
                     const token = jwt.sign({ id: user._id }, secretKey, { expiresIn: '1h' })
-                    res.status(201).json({token,message:'User Logged in Sucessfully'})
+                    res.status(201).json({token,message:'User Logged in Sucessfully',userId:user._id,username:user.username})
                 }
-                else
-                {
-                    res.status(404).json({message:'User Already exist please login with correct password'}) 
-                }
+                
+            }
+            else {
+                res.status(404).json({ message: 'User Already exist please login with correct password' })
             }
         }
 
@@ -59,7 +59,7 @@ router.post('/signin',async(req,res)=>{
     const parsedInputs = signinVariables.safeParse(req.body)
     if(!parsedInputs.success)
     {
-        res.status(401).json({message:'rong Inputs'})
+        res.status(401).json({message:'please enter the valid inputs'})
     }
     else
     {
@@ -70,12 +70,20 @@ router.post('/signin',async(req,res)=>{
             if(secretKey)
             {
                 const token = jwt.sign({ id: user._id }, secretKey, { expiresIn: '1h' })
-                res.status(201).json({message:'Loggedin successfully',token})
+                res.status(201).json({message:'Loggedin successfully',token,usename:user.username,userId:user._id})
             }
         }
         else
         {
-            res.status(201).json({ message: 'Wrong credentials' })
+            const existingemail = await User.findOne({useremail})
+            if(existingemail)
+            {
+                res.status(404).json({message:'Please enter the correct password'})
+            }
+            else
+            {
+                res.status(404).json({message:"This email is not registered"})
+            }
         }
     }
 })

@@ -34,7 +34,7 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
                 if (__1.secretKey) {
                     const token = jsonwebtoken_1.default.sign({ id: newUser._id }, __1.secretKey, { expiresIn: '1h' });
                     yield newUser.save();
-                    res.status(201).json({ message: 'USer signup successfully', token });
+                    res.status(201).json({ message: 'USer signup successfully', token, userId: newUser._id, username: newUser.username });
                 }
             }
             else {
@@ -46,11 +46,11 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (user) {
                 if (__1.secretKey) {
                     const token = jsonwebtoken_1.default.sign({ id: user._id }, __1.secretKey, { expiresIn: '1h' });
-                    res.status(201).json({ token, message: 'User Logged in Sucessfully' });
+                    res.status(201).json({ token, message: 'User Logged in Sucessfully', userId: user._id, username: user.username });
                 }
-                else {
-                    res.status(404).json({ message: 'User Already exist please login with correct password' });
-                }
+            }
+            else {
+                res.status(404).json({ message: 'User Already exist please login with correct password' });
             }
         }
     }
@@ -58,7 +58,7 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
 router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsedInputs = variables_1.signinVariables.safeParse(req.body);
     if (!parsedInputs.success) {
-        res.status(401).json({ message: 'rong Inputs' });
+        res.status(401).json({ message: 'please enter the valid inputs' });
     }
     else {
         const { useremail, password } = parsedInputs.data;
@@ -66,11 +66,17 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (user) {
             if (__1.secretKey) {
                 const token = jsonwebtoken_1.default.sign({ id: user._id }, __1.secretKey, { expiresIn: '1h' });
-                res.status(201).json({ message: 'Loggedin successfully', token });
+                res.status(201).json({ message: 'Loggedin successfully', token, usename: user.username, userId: user._id });
             }
         }
         else {
-            res.status(201).json({ message: 'Wrong credentials' });
+            const existingemail = yield db_1.User.findOne({ useremail });
+            if (existingemail) {
+                res.status(404).json({ message: 'Please enter the correct password' });
+            }
+            else {
+                res.status(404).json({ message: "This email is not registered" });
+            }
         }
     }
 }));

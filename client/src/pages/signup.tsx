@@ -1,12 +1,15 @@
 import { BASE_URL } from "@/config";
+import { userState } from "@/store/atom/user";
 import { Card, Typography, Button } from "@mui/material";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Eye ,EyeOff} from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useState } from "react";
+import { useSetRecoilState } from "recoil";
 
 export default function Signup() {
+    
     const router = useRouter()
     const [showPass, setShowPass] = useState<boolean>(false)
     const [username, setUsername] = useState<string>("")
@@ -16,10 +19,14 @@ export default function Signup() {
     const[ isUsernameValid ,setIsUsernameValid]= useState<boolean>(false)
     const [isEmailValid, setIsEmailValid] = useState<boolean>(false)
     const [isPasswordValid, setIsPasswordValid] = useState<boolean>(false) 
+    const setUser = useSetRecoilState(userState)
     useEffect(()=>{
-        setIsUsernameValid(!/\s/.test(username) && username.trim() !== "")  
-        setIsEmailValid(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) 
-        setIsPasswordValid(password.length > 4) 
+        const isUsernameValid = !/\s/.test(username) && username.trim() !== "";
+        const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+        const isPasswordValid = password.length > 4
+        setIsUsernameValid(isUsernameValid)  
+        setIsEmailValid(isEmailValid) 
+        setIsPasswordValid(isPasswordValid) 
         setDisable(!(isUsernameValid && isEmailValid && isPasswordValid))
     },[username,password,email])
     return (
@@ -68,7 +75,35 @@ export default function Signup() {
                     
                 <Button variant="contained" style={{ width: '70%' }}disabled={isDisabled}
                 onClick={async()=>{
-                    const res = axios.post(`${BASE_URL}`)
+                    try{
+                        const res = await axios.post(`${BASE_URL}/user/signup`, {
+                            username,
+                            useremail: email,
+                            password
+                        })
+                        if (res.data && res.data.token) {
+                                const token = res.data.token
+                                localStorage.setItem('token', "bearer " + token)
+                                setUser({
+                                    isUserLoading:false,
+                                    username:res.data.username,
+                                    userId:res.data.userId
+                                })
+                                router.push(`/dashboard/${res.data.userId}`)
+                        }
+                    }
+                    catch (err:unknown) {
+                        if(axios.isAxiosError(err))
+                        {
+                            const axiosError = err as AxiosError
+                            if (axiosError.response) {
+                                alert(`Error response: ${axiosError.response.data.message}`);
+                                console.log(`Status code: ${axiosError.response.status}`);
+                            }
+                        }
+                    }
+                    
+                    
                 }}>Signup</Button>
             </div>
             <div>

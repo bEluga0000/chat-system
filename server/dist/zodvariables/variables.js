@@ -9,7 +9,7 @@ exports.signupVaraibles = zod_1.z.object({
 });
 exports.signinVariables = zod_1.z.object({
     useremail: zod_1.z.string().email(),
-    password: zod_1.z.string().min(4)
+    password: zod_1.z.string()
 });
 exports.createRoomVars = zod_1.z.object({
     name: zod_1.z.string().max(50)
