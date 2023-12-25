@@ -1,10 +1,12 @@
 import AuthCompo from "@/components/authComponets"
 import Instructions from "@/components/instruction"
-import Logo from "@/components/logo"
+import Logo from "@/components/logocomponent"
 import { Card, Typography} from "@mui/material"
+import { useRouter } from "next/router"
 import styles from '../styles/allPages.module.css'
 
 export default function Home() {
+  const router = useRouter()
   return (
     <Card className={styles.room} style={{justifyContent:"space-between"}}>
       <div >

@@ -1,32 +1,40 @@
 import express from "express"
 import { User } from "../db"
-import { authVaraibles } from "../zodvariables/variables"
+import {signinVariables, signupVaraibles } from "../zodvariables/variables"
 import jwt from 'jsonwebtoken'
-import { secretKey, server } from ".."
+import { secretKey } from ".."
 import { authentication } from "../middlewares/auth"
-import { WebSocketServer } from "ws"
-import { wsOnconnection } from "../ws-connection/ws"
 const router = express.Router()
 
 router.post('/signup',async (req,res)=>{
-    const parsedInputs = authVaraibles.safeParse(req.body)
+    const parsedInputs = signupVaraibles.safeParse(req.body)
     if(!parsedInputs.success)
     {
         res.status(401).json({message:'Error Wrong Inputs'})
     }
     else
     {
-        const {useremail,password} = parsedInputs.data
+        const {username,useremail,password} = parsedInputs.data
         const existingUser = await User.findOne({useremail})
+        const existingUsername = await User.findOne({username})
         if(!existingUser)
         {
-            const newUser = new User({useremail,password})
-            if(secretKey)
+            if(!existingUsername)
             {
-                const token = jwt.sign({id:newUser._id},secretKey,{expiresIn:'1h'})
-                await newUser.save();
-                res.status(201).json({message:'USer signup successfully',token})
+                
+                const newUser = new User({ username, useremail, password })
+                if (secretKey) {
+                    const token = jwt.sign({ id: newUser._id }, secretKey, { expiresIn: '1h' })
+                    await newUser.save();
+                    res.status(201).json({ message: 'USer signup successfully', token })
+                }
             }
+            else
+            {
+                res.status(401).json({ message: 'username already exists' }) 
+                
+            }
+            
         }
         else
         {
@@ -38,7 +46,7 @@ router.post('/signup',async (req,res)=>{
                 }
                 else
                 {
-                    res.status(404).json({message:'User Already exist please login'}) 
+                    res.status(404).json({message:'User Already exist please login with correct password'}) 
                 }
             }
         }
@@ -48,7 +56,7 @@ router.post('/signup',async (req,res)=>{
 })
 
 router.post('/signin',async(req,res)=>{
-    const parsedInputs = authVaraibles.safeParse(req.body)
+    const parsedInputs = signinVariables.safeParse(req.body)
     if(!parsedInputs.success)
     {
         res.status(401).json({message:'rong Inputs'})

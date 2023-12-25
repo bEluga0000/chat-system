@@ -1,5 +1,6 @@
 import express from "express"
 import http from 'http'
+import cors from 'cors'
 import { WebSocketServer } from "ws"
 import { wsOnconnection } from "./ws-connection/ws"
 import mongoose from 'mongoose'
@@ -9,7 +10,7 @@ import roomRouter from "./routes/rooms"
 const app1 = express()
 const PORT1 = 3000
 dotenv.config()
-
+app1.use(cors())
 app1.use(express.json())
 app1.use('/user',userRouter)
 app1.use('/rooms',roomRouter)

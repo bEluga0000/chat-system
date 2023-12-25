@@ -1,9 +1,14 @@
 import { z } from "zod";
 
-export const authVaraibles = z.object({
+export const signupVaraibles = z.object({
+    username:z.string().max(15),
     useremail:z.string().email(),
     password:z.string().min(4)
 });
+export const signinVariables = z.object({
+    useremail:z.string().email(),
+    password:z.string()
+})
 
 export const createRoomVars = z.object({
     name:z.string().max(50)

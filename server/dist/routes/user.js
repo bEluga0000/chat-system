@@ -20,19 +20,25 @@ const __1 = require("..");
 const auth_1 = require("../middlewares/auth");
 const router = express_1.default.Router();
 router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const parsedInputs = variables_1.authVaraibles.safeParse(req.body);
+    const parsedInputs = variables_1.signupVaraibles.safeParse(req.body);
     if (!parsedInputs.success) {
         res.status(401).json({ message: 'Error Wrong Inputs' });
     }
     else {
-        const { useremail, password } = parsedInputs.data;
+        const { username, useremail, password } = parsedInputs.data;
         const existingUser = yield db_1.User.findOne({ useremail });
+        const existingUsername = yield db_1.User.findOne({ username });
         if (!existingUser) {
-            const newUser = new db_1.User({ useremail, password });
-            if (__1.secretKey) {
-                const token = jsonwebtoken_1.default.sign({ id: newUser._id }, __1.secretKey, { expiresIn: '1h' });
-                yield newUser.save();
-                res.status(201).json({ message: 'USer signup successfully', token });
+            if (!existingUsername) {
+                const newUser = new db_1.User({ username, useremail, password });
+                if (__1.secretKey) {
+                    const token = jsonwebtoken_1.default.sign({ id: newUser._id }, __1.secretKey, { expiresIn: '1h' });
+                    yield newUser.save();
+                    res.status(201).json({ message: 'USer signup successfully', token });
+                }
+            }
+            else {
+                res.status(401).json({ message: 'username already exists' });
             }
         }
         else {
@@ -43,14 +49,14 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
                     res.status(201).json({ token, message: 'User Logged in Sucessfully' });
                 }
                 else {
-                    res.status(404).json({ message: 'User Already exist please login' });
+                    res.status(404).json({ message: 'User Already exist please login with correct password' });
                 }
             }
         }
     }
 }));
 router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const parsedInputs = variables_1.authVaraibles.safeParse(req.body);
+    const parsedInputs = variables_1.signinVariables.safeParse(req.body);
     if (!parsedInputs.success) {
         res.status(401).json({ message: 'rong Inputs' });
     }
