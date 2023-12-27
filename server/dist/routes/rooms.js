@@ -17,6 +17,16 @@ const db_1 = require("../db");
 const auth_1 = require("../middlewares/auth");
 const variables_1 = require("../zodvariables/variables");
 const router = express_1.default.Router();
+router.get(`/allRooms`, auth_1.authentication, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = req.headers["userId"];
+    try {
+        const rooms = yield db_1.Rooms.find({ subscribeUsers: { $nin: [userId] } }).select('_id name createdBy');
+        res.status(201).json({ rooms });
+    }
+    catch (err) {
+        res.status(501).json({ message: "server Error" });
+    }
+}));
 router.post('/createRoom', auth_1.authentication, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsedInputs = variables_1.createRoomVars.safeParse(req.body);
     if (!parsedInputs.success) {
@@ -26,15 +36,53 @@ router.post('/createRoom', auth_1.authentication, (req, res) => __awaiter(void 0
         try {
             const { name } = parsedInputs.data;
             const createdUserId = req.headers['userId'];
-            const newRoom = new db_1.Rooms({ name, subscribeUsers: [createdUserId], createdBy: createdUserId });
+            const createUsername = yield db_1.User.findById(createdUserId);
+            if (!createUsername) {
+                res.status(404).json({ message: 'User Not found' });
+            }
+            const newRoom = new db_1.Rooms({ name, subscribeUsers: [createdUserId], createdBy: createUsername === null || createUsername === void 0 ? void 0 : createUsername.username });
             yield newRoom.save();
             const user = yield db_1.User.findByIdAndUpdate(createdUserId, { $push: { rooms: newRoom._id } }, { new: true });
-            res.status(201).json({ roomId: newRoom._id, user });
+            const subRooms = user === null || user === void 0 ? void 0 : user.rooms;
+            const roomDetails = yield db_1.Rooms.find({ _id: { $in: subRooms } }).select('_id name createdBy');
+            res.status(201).json({ roomId: newRoom._id, user, roomDetails });
         }
         catch (err) {
             res.status(501).send(err);
         }
     }
+}));
+router.get('/roomDetails/:roomId', auth_1.authentication, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const roomId = req.params.roomId;
+    const userId = req.headers['userId'];
+    const room = yield db_1.Rooms.findById(roomId);
+    if (!room) {
+        res.status(404).json({ message: 'Room Not found' });
+        return;
+    }
+    if (typeof (userId) === 'string') {
+        const isUserSubscribed = room.subscribeUsers.includes(userId);
+        if (!isUserSubscribed) {
+            res.status(401).json({ message: 'You are not authenticated to get the room Details' });
+        }
+        else {
+            const subUsers = room.subscribeUsers;
+            const subUserNames = yield db_1.User.find({ _id: { $in: subUsers } }).select('username').lean();
+            res.status(201).json({ roomId: room._id, name: room.name, createdBy: room.createdBy, subUserNames });
+        }
+    }
+    else {
+        res.status(401).json({ message: 'Invalid UserId' });
+    }
+}));
+router.get('/:roomId', auth_1.authentication, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const roomId = req.params.roomId;
+    const room = yield db_1.Rooms.findById(roomId).select('_id name');
+    if (!room) {
+        res.status(404).json({ message: 'Room not found' });
+        return;
+    }
+    res.status(201).json({ room });
 }));
 router.put('/join', auth_1.authentication, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const parsedInputs = variables_1.joinRoomsVars.safeParse(req.body);
@@ -62,10 +110,11 @@ router.put('/join', auth_1.authentication, (req, res) => __awaiter(void 0, void 
                         return;
                     }
                     else {
-                        console.log('I am running');
                         const user = yield db_1.User.findByIdAndUpdate(userId, { $push: { rooms: roomId } }, { new: true });
                         const room = yield db_1.Rooms.findByIdAndUpdate(roomId, { $push: { subscribeUsers: userId } }, { new: true });
-                        res.status(201).json({ message: 'Room created successfully', user });
+                        const subRooms = user === null || user === void 0 ? void 0 : user.rooms;
+                        const roomDetails = yield db_1.Rooms.find({ _id: { $in: subRooms } }).select('_id name createdBy');
+                        res.status(201).json({ message: 'Room created successfully', user, roomDetails });
                     }
                 }
             }
@@ -93,8 +142,10 @@ router.put('/exit/:roomId', auth_1.authentication, (req, res) => __awaiter(void 
             const userInRoom = isRoom.subscribeUsers.includes(userId);
             if (userInRoom) {
                 const user = yield db_1.User.findByIdAndUpdate(userId, { $pull: { rooms: roomId } }, { new: true });
-                const room = yield db_1.Rooms.findByIdAndUpdate(roomId, { $pull: { subscribeUsers: userId } }, { new: true });
-                res.status(201).json({ message: 'Room created successfully', user });
+                yield db_1.Rooms.findByIdAndUpdate(roomId, { $pull: { subscribeUsers: userId } }, { new: true });
+                const subRooms = user === null || user === void 0 ? void 0 : user.rooms;
+                const roomDetails = yield db_1.Rooms.find({ _id: { $in: subRooms } }).select('_id name createdBy');
+                res.status(201).json({ message: 'Exited successfully', user, roomDetails });
             }
             else {
                 res.status(401).json({ message: 'User Already in that room' });

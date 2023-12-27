@@ -1,5 +1,5 @@
 import express from "express"
-import { User } from "../db"
+import { Rooms, User } from "../db"
 import {signinVariables, signupVaraibles } from "../zodvariables/variables"
 import jwt from 'jsonwebtoken'
 import { secretKey } from ".."
@@ -26,7 +26,7 @@ router.post('/signup',async (req,res)=>{
                 if (secretKey) {
                     const token = jwt.sign({ id: newUser._id }, secretKey, { expiresIn: '1h' })
                     await newUser.save();
-                    res.status(201).json({ message: 'USer signup successfully', token ,userId:newUser._id,username:newUser.username})
+                    res.status(201).json({ message: 'USer signup successfully', token ,userId:newUser._id,username:newUser.username,rooms:[]})
                 }
             }
             else
@@ -42,7 +42,10 @@ router.post('/signup',async (req,res)=>{
             if (user) {
                 if (secretKey) {
                     const token = jwt.sign({ id: user._id }, secretKey, { expiresIn: '1h' })
-                    res.status(201).json({token,message:'User Logged in Sucessfully',userId:user._id,username:user.username})
+                    const subRooms = user.rooms
+                    const rooms = await Rooms.find({_id:{$in:subRooms}}).select('_id name createdBy')
+
+                    res.status(201).json({token,message:'User Logged in Sucessfully',userId:user._id,username:user.username,rooms})
                 }
                 
             }
@@ -70,7 +73,9 @@ router.post('/signin',async(req,res)=>{
             if(secretKey)
             {
                 const token = jwt.sign({ id: user._id }, secretKey, { expiresIn: '1h' })
-                res.status(201).json({message:'Loggedin successfully',token,usename:user.username,userId:user._id})
+                const subRooms = user.rooms
+                const rooms = await Rooms.find({ _id: { $in: subRooms } }).select('_id name createdBy')
+                res.status(201).json({message:'Loggedin successfully',token,usename:user.username,userId:user._id,rooms:rooms})
             }
         }
         else
@@ -93,7 +98,9 @@ router.get('/me',authentication,async(req,res)=>{
     const user = await User.findById(userId)
     if(user)
     {
-        res.status(201).json({useremail:user.useremail,rooms:user.rooms})
+        const subscribedRooms = user.rooms
+        const roomDetails = await Rooms.find({_id:{$in:subscribedRooms}}).select('_id name createdBy')
+        res.status(201).json({username:user.username,userId:user._id,rooms:roomDetails})
     }
     else
     {

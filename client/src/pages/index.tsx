@@ -1,12 +1,26 @@
 import AuthCompo from "@/components/authComponets"
 import Instructions from "@/components/instruction"
 import Logo from "@/components/logocomponent"
-import { Card, Typography} from "@mui/material"
+import { isUserLoading, usernameState,userIdState } from "@/store/selector/userstates"
+import { Card, CircularProgress, Typography} from "@mui/material"
 import { useRouter } from "next/router"
+import { useRecoilValue } from "recoil"
 import styles from '../styles/allPages.module.css'
 
 export default function Home() {
   const router = useRouter()
+  const isloading = useRecoilValue(isUserLoading)
+  const username = useRecoilValue(usernameState)
+
+  if(isloading)
+  {
+    return <CircularProgress/>
+  }
+  if(username)
+  {
+    alert(username)
+    router.push(`/dashboard`)
+  }
   return (
     <Card className={styles.room} style={{justifyContent:"space-between"}}>
       <div >

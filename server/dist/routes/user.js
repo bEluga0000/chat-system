@@ -34,7 +34,7 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
                 if (__1.secretKey) {
                     const token = jsonwebtoken_1.default.sign({ id: newUser._id }, __1.secretKey, { expiresIn: '1h' });
                     yield newUser.save();
-                    res.status(201).json({ message: 'USer signup successfully', token, userId: newUser._id, username: newUser.username });
+                    res.status(201).json({ message: 'USer signup successfully', token, userId: newUser._id, username: newUser.username, rooms: [] });
                 }
             }
             else {
@@ -46,7 +46,9 @@ router.post('/signup', (req, res) => __awaiter(void 0, void 0, void 0, function*
             if (user) {
                 if (__1.secretKey) {
                     const token = jsonwebtoken_1.default.sign({ id: user._id }, __1.secretKey, { expiresIn: '1h' });
-                    res.status(201).json({ token, message: 'User Logged in Sucessfully', userId: user._id, username: user.username });
+                    const subRooms = user.rooms;
+                    const rooms = yield db_1.Rooms.find({ _id: { $in: subRooms } }).select('_id name createdBy');
+                    res.status(201).json({ token, message: 'User Logged in Sucessfully', userId: user._id, username: user.username, rooms });
                 }
             }
             else {
@@ -66,7 +68,9 @@ router.post('/signin', (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (user) {
             if (__1.secretKey) {
                 const token = jsonwebtoken_1.default.sign({ id: user._id }, __1.secretKey, { expiresIn: '1h' });
-                res.status(201).json({ message: 'Loggedin successfully', token, usename: user.username, userId: user._id });
+                const subRooms = user.rooms;
+                const rooms = yield db_1.Rooms.find({ _id: { $in: subRooms } }).select('_id name createdBy');
+                res.status(201).json({ message: 'Loggedin successfully', token, usename: user.username, userId: user._id, rooms: rooms });
             }
         }
         else {
@@ -84,7 +88,9 @@ router.get('/me', auth_1.authentication, (req, res) => __awaiter(void 0, void 0,
     const userId = req.headers['userId'];
     const user = yield db_1.User.findById(userId);
     if (user) {
-        res.status(201).json({ useremail: user.useremail, rooms: user.rooms });
+        const subscribedRooms = user.rooms;
+        const roomDetails = yield db_1.Rooms.find({ _id: { $in: subscribedRooms } }).select('_id name createdBy');
+        res.status(201).json({ username: user.username, userId: user._id, rooms: roomDetails });
     }
     else {
         res.status(404).json({ message: 'user Not found' });

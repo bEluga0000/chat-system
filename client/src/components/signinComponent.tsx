@@ -51,10 +51,11 @@ export default function SigninCompo()
                         localStorage.setItem("token","bearer "+token)
                         setUser({
                             isUserLoading:false,
-                            username:res.data.username,
-                            userId:res.data.userId
+                            username:res.data.usename,
+                            userId:res.data.userId,
+                            subRooms:res.data.rooms
                         })
-                        route.push(`/dashboard/${res.data.userId}`)
+                        route.push(`/dashboard`)
                     }
                 }
                 catch(err:unknown)

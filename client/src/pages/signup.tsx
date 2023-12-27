@@ -84,12 +84,13 @@ export default function Signup() {
                         if (res.data && res.data.token) {
                                 const token = res.data.token
                                 localStorage.setItem('token', "bearer " + token)
-                                setUser({
-                                    isUserLoading:false,
-                                    username:res.data.username,
-                                    userId:res.data.userId
-                                })
-                                router.push(`/dashboard/${res.data.userId}`)
+                            setUser({
+                                isUserLoading: false,
+                                username: res.data.username,
+                                userId: res.data.userId,
+                                subRooms: res.data.rooms
+                            })
+                                router.push(`/dashboard`)
                         }
                     }
                     catch (err:unknown) {
