@@ -74,36 +74,46 @@ export default function Rooms() {
         init()
 
     }, [roomId])
+    
     useEffect(()=>{
-        const ws = new WebSocket("ws://localhost:3000")
-        if(userId)
+        if(!websocket)
         {
-            ws.onopen = () => {
+            const ws = new WebSocket("ws://localhost:3000")
+            if (userId) {
+                ws.onopen = () => {
+                    ws.send(JSON.stringify({
+                        type: 'join',
+                        payload: {
+                            id: userId,
+                            roomId: roomId
+                        }
+                    }))
+                }
+                ws.onmessage = (event) => {
+                    const data: WebSocketMessage = JSON.parse(event.data)
+                    if (data.type === 'message') {
+                        setMsg((prevMessages) => {
+                            const reversedData = [data.payload, ...prevMessages]
+                            return reversedData
+                        })
+                    }
+                }
+                setwebsocket(ws)
+            }
+
+            return () => {
+                
+                ws.close()
                 ws.send(JSON.stringify({
-                    type: 'join',
+                    type: "exit",
                     payload: {
                         id: userId,
                         roomId: roomId
                     }
                 }))
             }
-            ws.onmessage = (event)=>{
-                const data: WebSocketMessage = JSON.parse(event.data)
-                if(data.type === 'message')
-                {
-                    setMsg((prevMessages)=>{
-                        const reversedData = [data.payload,...prevMessages]
-                        return reversedData
-                    })
-                }
-            }
-            setwebsocket(ws)
         }
         
-        return () => {
-
-            ws.close()
-        }
     },[roomId,userId])
     if (isLoading) {
         return <CircularProgress />
