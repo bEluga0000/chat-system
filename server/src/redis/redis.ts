@@ -35,18 +35,15 @@ export class RedisSubscriptionManager {
     }
 
     subscribe(userId: string, room: string, ws: any) {
-        console.log(this.subscriptions)
         this.subscriptions.set(userId, [
             ...(this.subscriptions.get(userId) || []),
             room,
         ]);
-        console.log(this.subscriptions)
-        console.log(this.reverseSubscriptions)
+
         this.reverseSubscriptions.set(room, {
             ...(this.reverseSubscriptions.get(room) || {}),
             [userId]: { userId: userId, ws },
         });
-        console.log(this.reverseSubscriptions)
 
         if (Object.keys(this.reverseSubscriptions.get(room) || {})?.length === 1) {
             console.log(`subscribing message from ${room}`);
@@ -81,10 +78,11 @@ export class RedisSubscriptionManager {
         }
     }
 
-    async addChatMessage(room: string, message: string) {
+    async addChatMessage(room: string, message: string,username:string) {
         this.publish(room, {
             type: "message",
             payload: {
+                username,
                 message
             }
         })

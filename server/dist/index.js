@@ -25,7 +25,6 @@ exports.secretKey = process.env.SECRET_KEY;
 exports.server = http_1.default.createServer(app1);
 const wss = new ws_1.WebSocketServer({ server: exports.server });
 wss.on('connection', (ws, req) => {
-    ws.send("Bro made a successfull connection");
     (0, ws_2.wsOnconnection)(ws, req);
 });
 if (mongoose_url && exports.secretKey) {

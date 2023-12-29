@@ -1,10 +1,10 @@
 import { Typography } from "@mui/material"
-export default function ShowChats()
+export default function ShowChats({message,uname}:{message:string,uname:string})
 {
     return(
         <div >
-            <Typography variant="subtitle2" >- <span style={{ textDecoration: 'underline' }}>Username</span></Typography>
-            <Typography variant="subtitle1">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Rem nostrum veritatis fugit  dolorem!</Typography>
+            <Typography variant="subtitle2" >- <span style={{ textDecoration: 'underline' }}>{uname}</span></Typography>
+            <Typography variant="subtitle1">{message}</Typography>
         </div>
     )
 }

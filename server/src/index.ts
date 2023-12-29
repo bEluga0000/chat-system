@@ -21,7 +21,6 @@ export const secretKey: string | undefined = process.env.SECRET_KEY
 export const server = http.createServer(app1)
 const wss = new WebSocketServer({ server })
 wss.on('connection', (ws, req) => {
-    ws.send("Bro made a successfull connection")
     wsOnconnection(ws, req)
 })
 

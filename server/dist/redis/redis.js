@@ -37,15 +37,11 @@ class RedisSubscriptionManager {
     }
     subscribe(userId, room, ws) {
         var _a;
-        console.log(this.subscriptions);
         this.subscriptions.set(userId, [
             ...(this.subscriptions.get(userId) || []),
             room,
         ]);
-        console.log(this.subscriptions);
-        console.log(this.reverseSubscriptions);
         this.reverseSubscriptions.set(room, Object.assign(Object.assign({}, (this.reverseSubscriptions.get(room) || {})), { [userId]: { userId: userId, ws } }));
-        console.log(this.reverseSubscriptions);
         if (((_a = Object.keys(this.reverseSubscriptions.get(room) || {})) === null || _a === void 0 ? void 0 : _a.length) === 1) {
             console.log(`subscribing message from ${room}`);
             // This is the first subscriber to this room
@@ -75,11 +71,12 @@ class RedisSubscriptionManager {
             this.reverseSubscriptions.delete(room);
         }
     }
-    addChatMessage(room, message) {
+    addChatMessage(room, message, username) {
         return __awaiter(this, void 0, void 0, function* () {
             this.publish(room, {
                 type: "message",
                 payload: {
+                    username,
                     message
                 }
             });
