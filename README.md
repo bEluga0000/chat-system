@@ -37,7 +37,7 @@ To run the Chat System locally, follow these steps:
 4. Start the development servers:
 
    - Frontend: `cd client && npm run dev`
-   - Backend: `cd server && npm start`
+   - Backend: `cd server && node dist/index.js`
 
 Visit `http://localhost:3000` in your browser to access the Chat System.
 
